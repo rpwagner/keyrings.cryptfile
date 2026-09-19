@@ -1,6 +1,6 @@
-pytest >= 2.8
+pytest >= 7
 pytest-cov
-keyring[testing]
+keyring[test]
 
 pycryptodome
 argon2_cffi
