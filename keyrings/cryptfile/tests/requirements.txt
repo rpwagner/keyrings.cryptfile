@@ -1,6 +1,0 @@
-pytest >= 7
-pytest-cov
-keyring[test]
-
-pycryptodome
-argon2_cffi

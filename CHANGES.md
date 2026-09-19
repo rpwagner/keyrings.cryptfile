@@ -1,5 +1,14 @@
-1.4.1 (unreleased)
+1.5.0 (unreleased)
 ==================
+- Support and test CPython 3.9 through 3.14.
+- Move package metadata and build configuration to `pyproject.toml`.
+- Update runtime and test dependency floors to currently supported releases.
+- Preserve and exercise compatibility with encrypted vault fixtures from
+  versions 1.3.4 through 1.3.9.
+- Modernize the test suite and GitHub Actions matrix.
+
+1.4.1
+=====
 - Support for pulling the database from from the environment variable `KEYRING_CRYPTFILE_PASSWORD`
 - Support for customizing the location of the encrypted file config with the environment variable `KEYRING_CRYPTFILE_PATH`
 

@@ -2,7 +2,7 @@ Summary
 -------
 
 Encrypted plain file keyring backend for use with the
-[keyring](https://pypi.python.org/pypi/keyring)  package.
+[keyring](https://pypi.org/project/keyring/) package.
 
 Description
 -----------
@@ -38,31 +38,29 @@ in order to calculate the hashes, which renders brute force attacks impractical.
 The authenticated AES encryption scheme prevents tampering with the encrypted
 data as well as its reference (service/userid).
 
+Format-sensitive and security-relevant follow-up work is tracked in the
+[known issues document](https://github.com/rpwagner/keyrings.cryptfile/blob/main/KNOWN_ISSUES.md).
+
 Quick start guide
 -----------------
 
-In order to get you started, you will need to have a `python3` environment
-and `git` available (preferably on a linux system).
+`keyrings.cryptfile` supports CPython 3.9 through 3.14. Its current runtime
+dependencies support Linux, macOS, and Windows.
 
-You might want to provide the python packages [argon2-cffi](https://pypi.python.org/pypi/argon2_cffi), [keyring](https://pypi.python.org/pypi/keyring), [pycryptodome](https://pypi.python.org/pypi/pycryptodome)
-and their dependencies (most notably [SecretStorage](https://pypi.python.org/pypi/SecretStorage) and [cryptography](https://pypi.python.org/pypi/cryptography)) with your
-system package management, or use a local venv, but that will depend on a
-properly working C compiler and some development packages installed
-(`python-devel` and `openssl-devel` at least).
+Installation brings in [argon2-cffi](https://pypi.org/project/argon2-cffi/),
+[keyring](https://pypi.org/project/keyring/), and
+[pycryptodome](https://pypi.org/project/pycryptodome/) automatically.
 
 Setup package and environment
 -----------------------------
 
 ```
-$ git clone https://github.com/frispete/keyrings.cryptfile
+$ git clone https://github.com/rpwagner/keyrings.cryptfile
 $ cd keyrings.cryptfile
-$ pyvenv env
-$ . env/bin/activate
-(env) $ pip install -e .
+$ python3 -m venv .venv
+$ . .venv/bin/activate
+(.venv) $ python -m pip install -e .
 ```
-
-The last command should succeed without errors, some development packages might
-be missing otherwise.
 
 Example session
 ---------------
@@ -71,9 +69,7 @@ Create an encrypted keyring, and store a test password into it. The process asks
 for the keyring password itself, that protects your stored keyring values.
 
 ```
-(env) $ python3
-Python 3.4.5 (default, Jul 03 2016, 12:57:15) [GCC] on linux
-Type "help", "copyright", "credits" or "license" for more information.
+(.venv) $ python
 >>> from keyrings.cryptfile.cryptfile import CryptFileKeyring
 >>> kr = CryptFileKeyring()
 >>> kr.set_password("service", "user", "secret")
@@ -85,9 +81,7 @@ Please confirm the password: ******
 Now retrieve the stored secret from the keyring again:
 
 ```
-(env) $ python3
-Python 3.4.5 (default, Jul 03 2016, 12:57:15) [GCC] on linux
-Type "help", "copyright", "credits" or "license" for more information.
+(.venv) $ python
 >>> from keyrings.cryptfile.cryptfile import CryptFileKeyring
 >>> kr = CryptFileKeyring()
 >>> kr.get_password("service", "user")
@@ -104,7 +98,7 @@ Result
 
 The resulting file might look similar to:
 ```
-(env) $ cat ~/.local/share/python_keyring/cryptfile_pass.cfg
+(.venv) $ cat ~/.local/share/python_keyring/cryptfile_pass.cfg
 [keyring_2Dsetting]
 password_20reference =
     eyJtYWMiOiAiWmVHU2lBalZ5WHd6Vmg3K2Z6TGx2UT09IiwgIm5vbmNlIjogIjB0b2dKa3RYdmdY
@@ -123,7 +117,7 @@ user =
 The values can be decoded like this:
 
 ```
-(env) $ python3
+(.venv) $ python
 >>> import base64
 >>> base64.decodebytes(b"""
 ... eyJtYWMiOiAiaTJ4MWhNVGJ1S0pTZExYSXQwR0dqUT09IiwgIm5vbmNlIjogIlJ5YU1DZmkyZ0JE
@@ -160,9 +154,10 @@ supplying `kr.keyring_key = "your keyring password"` before calling any other
 methods on the keyring.
 
 ```python
+import keyring
 from getpass import getpass
-from os import getenv
 from keyrings.cryptfile.cryptfile import CryptFileKeyring
+
 kr = CryptFileKeyring()
 kr.keyring_key = getpass()
 keyring.set_keyring(kr)
@@ -171,25 +166,32 @@ keyring.set_keyring(kr)
 or the keyring password can be provided via an environment variable
 
 ```python
+import keyring
+import os
+
 os.environ['KEYRING_CRYPTFILE_PASSWORD']='password'
 
-from getpass import getpass
-from os import getenv
 from keyrings.cryptfile.cryptfile import CryptFileKeyring
+
 kr = CryptFileKeyring()
 keyring.set_keyring(kr)
 ```
 
 Environment variables
 ---------------------
-`KEYRING_CRYPTFILE_PATH` can be used to customize the location of the encrypted file config
-`KEYRING_CRYPTFILE_PASSWORD` can be used to provide the password for the encrypted keyring database
+
+- `KEYRING_CRYPTFILE_PATH` customizes the encrypted vault path.
+- `KEYRING_CRYPTFILE_PASSWORD` provides the vault's master password without an
+  interactive prompt.
 
 Testing
 -------
 
-Testing is done with pytest as usual. Just executing `pytest` should do the trick.
-A verbose test run is performed with `pytest -v`, while a single test is selected
-with `pytest -vk test_wrong_password`.
+Install the test dependencies and run pytest:
+
+```
+(.venv) $ python -m pip install -e ".[test]"
+(.venv) $ python -m pytest -ra --pyargs keyrings.cryptfile.tests
+```
 
 Feedback is always welcome.

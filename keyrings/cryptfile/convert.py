@@ -1,7 +1,5 @@
 """Simple tool to convert cryptfile keyring encryption modes"""
 
-from __future__ import print_function
-
 import os
 import sys
 import logging
@@ -24,7 +22,7 @@ Default infile:
 %s
 """ % CryptFileKeyring().file_path
 
-class CommandLineTool(object):
+class CommandLineTool:
     def __init__(self):
         self.aesmodes = CryptFileKeyring._get_mode()
         self.parser = argparse.ArgumentParser(

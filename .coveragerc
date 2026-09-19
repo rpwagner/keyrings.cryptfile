@@ -23,8 +23,7 @@ exclude_lines =
 
     # don't try to cover abstracts
     @abc.abstractmethod
-    @abc.abstractproperty
-    
+
     # don't try to cover special properties
     @properties.NonDataProperty
 

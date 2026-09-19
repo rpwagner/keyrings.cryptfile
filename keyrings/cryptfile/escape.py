@@ -6,10 +6,7 @@ alphanumeric usernames, services, or other values
 import re
 import string
 
-LEGAL_CHARS = (
-    getattr(string, 'letters', None)  # Python 2
-    or getattr(string, 'ascii_letters')  # Python 3
-) + string.digits + "_"
+LEGAL_CHARS = string.ascii_letters + string.digits + "_"
 
 ESCAPE_FMT = "_%02X"
 

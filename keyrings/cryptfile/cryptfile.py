@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 import os
 import json
 
@@ -17,7 +15,7 @@ DEFAULT_PARALLELISM = 2
 
 DEFAULT_AES_MODE = 'GCM'
 
-class ArgonAESEncryption(object):
+class ArgonAESEncryption:
     """
     AEAD AES encryption (default: GCM) with Argon2 based KDF support
     """

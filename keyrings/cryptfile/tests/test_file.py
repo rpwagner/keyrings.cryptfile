@@ -1,7 +1,5 @@
 import os
-import tempfile
 import sys
-import errno
 import getpass
 import configparser
 
@@ -20,19 +18,8 @@ from keyring.errors import PasswordDeleteError
 
 class FileKeyringTests(BackendBasicTests):
     @pytest.fixture(autouse=True)
-    def _init_properties_for_file(self):
-        self.keyring.file_path = tempfile.mktemp()
-        yield
-
-    @pytest.fixture(autouse=True)
-    def _cleanup_for_file(self):
-        yield
-        try:
-            os.remove(self.keyring.file_path)  # remove file
-        except OSError:  # is a directory
-            e = sys.exc_info()[1]
-            if e.errno != errno.ENOENT:  # No such file or directory
-                raise
+    def _init_properties_for_file(self, tmp_path):
+        self.keyring.file_path = os.fspath(tmp_path / 'keyring.cfg')
 
     def get_config(self):
         # setting a password triggers keyring file creation
@@ -49,6 +36,16 @@ class FileKeyringTests(BackendBasicTests):
         with pytest.warns(DeprecationWarning, match="Empty usernames"):
             with pytest.raises(ValueError, match="Username cannot be blank"):
                 self.set_password('service1', '', 'password1')
+
+    def test_non_text_password(self):
+        with pytest.raises(TypeError, match="unicode string"):
+            self.keyring.set_password('service', 'user', b'password')
+
+    def test_missing_parent_directory_is_created(self, tmp_path):
+        self.keyring.file_path = os.fspath(tmp_path / 'nested' / 'keyring.cfg')
+        self.set_password('system', 'user', 'password')
+
+        assert self.keyring.get_password('system', 'user') == 'password'
 
     def test_encrypt_decrypt(self):
         password = random_string(20)
@@ -169,6 +166,9 @@ class TestEncryptedFileKeyring(FileKeyringTests):
 
     def init_keyring(self):
         return file.EncryptedKeyring()
+
+    def test_backend_priority(self):
+        assert file.EncryptedKeyring.priority == 0.6
 
     def test_wrong_password(self):
         self.set_password('system', 'user', 'password')

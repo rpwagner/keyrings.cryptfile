@@ -1,8 +1,6 @@
-from __future__ import with_statement
-
-import os
 import abc
 import configparser
+import os
 from base64 import encodebytes, decodebytes
 
 from jaraco.classes import properties
@@ -11,10 +9,12 @@ from keyring.backend import KeyringBackend
 from keyring.util import platform_
 from .escape import escape as escape_for_ini
 
-KEYRING_CRYPTFILE_PATH  = 'KEYRING_CRYPTFILE_PATH'
+KEYRING_CRYPTFILE_PATH = 'KEYRING_CRYPTFILE_PATH'
 
-class FileBacked(object):
-    @abc.abstractproperty
+
+class FileBacked(abc.ABC):
+    @property
+    @abc.abstractmethod
     def filename(self):
         """
         The filename used to store the passwords.
@@ -29,14 +29,16 @@ class FileBacked(object):
         default = os.path.join(platform_.data_root(), self.filename)
         return os.environ.get(KEYRING_CRYPTFILE_PATH, default)
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def scheme(self):
         """
         The encryption scheme used to store the passwords.
         """
         return 'not defined'
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def version(self):
         """
         The encryption version used to store the passwords.
@@ -180,7 +182,7 @@ class Keyring(FileBacked, KeyringBackend):
         """
         storage_root = os.path.dirname(self.file_path)
         needs_storage_root = storage_root and not os.path.isdir(storage_root)
-        if needs_storage_root:  # pragma: no cover
+        if needs_storage_root:
             os.makedirs(storage_root)
         if not os.path.isfile(self.file_path):
             # create the file without group/world permissions
