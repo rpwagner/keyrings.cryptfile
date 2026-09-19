@@ -1,5 +1,5 @@
-1.5.0 (unreleased)
-==================
+1.5.0
+=====
 - Support and test CPython 3.9 through 3.14.
 - Move package metadata and build configuration to `pyproject.toml`.
 - Update runtime and test dependency floors to currently supported releases.
