@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "keyrings.cryptfile"
+dynamic = ["version"]
+description = "Encrypted file keyring backend"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE.txt"]
+authors = [
+    { name = "Hans-Peter Jansen", email = "hpj@urpla.net" },
+]
+dependencies = [
+    "argon2-cffi>=25.1",
+    "jaraco.classes>=3.4",
+    "keyring>=25.7",
+    "pycryptodome>=3.23",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+[project.optional-dependencies]
+test = [
+    "keyring[test]>=25.7",
+    "pytest>=8.4",
+    "pytest-cov>=7.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/rpwagner/keyrings.cryptfile"
+Repository = "https://github.com/rpwagner/keyrings.cryptfile.git"
+Changelog = "https://github.com/rpwagner/keyrings.cryptfile/blob/main/CHANGES.md"
+"Known Issues" = "https://github.com/rpwagner/keyrings.cryptfile/blob/main/KNOWN_ISSUES.md"
+
+[project.scripts]
+cryptfile-convert = "keyrings.cryptfile.convert:main"
+
+[project.entry-points."keyring.backends"]
+cryptfile = "keyrings.cryptfile.cryptfile"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = { attr = "keyrings.cryptfile.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["keyrings*"]
+
+[tool.setuptools.package-data]
+"keyrings.cryptfile.tests" = ["*.cfg", "*.txt"]
+
+[tool.pytest.ini_options]
+addopts = "--strict-config --strict-markers --cov=keyrings.cryptfile"

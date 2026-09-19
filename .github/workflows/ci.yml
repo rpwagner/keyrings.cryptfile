@@ -37,10 +37,14 @@ jobs:
             python-version: "3.11"
           - os: ubuntu-latest
             python-version: "3.12"
+          - os: ubuntu-latest
+            python-version: "3.13"
+          - os: ubuntu-latest
+            python-version: "3.14"
           - os: windows-latest
-            python-version: "3.12"
+            python-version: "3.14"
           - os: macos-latest
-            python-version: "3.12"
+            python-version: "3.14"
     steps:
       - uses: actions/checkout@v7
       - name: Set up Python ${{ matrix.python-version }}
@@ -48,12 +52,42 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-          cache-dependency-path: keyrings/cryptfile/tests/requirements.txt
+          cache-dependency-path: pyproject.toml
       - name: Install package and test dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --editable . --requirement keyrings/cryptfile/tests/requirements.txt
+          python -m pip install --editable ".[test]"
           python -m pip check
       - name: Run complete test suite with coverage
         run: |
           python -m pytest -ra --cov-report=term-missing --pyargs keyrings.cryptfile.tests
+
+  package:
+    name: Build and install distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Build wheel and source distribution
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+      - name: Verify distribution contents
+        run: |
+          python -c "import glob, zipfile; names = zipfile.ZipFile(glob.glob('dist/*.whl')[0]).namelist(); assert all(f'keyrings/cryptfile/tests/cp1.3.{patch}.cfg' in names for patch in range(4, 10))"
+          python -c "import glob, tarfile; names = tarfile.open(glob.glob('dist/*.tar.gz')[0]).getnames(); assert all(any(name.endswith(f'/keyrings/cryptfile/tests/cp1.3.{patch}.cfg') for name in names) for patch in range(4, 10))"
+      - name: Install and smoke-test wheel
+        run: |
+          python -m venv "${RUNNER_TEMP}/wheel-smoke"
+          "${RUNNER_TEMP}/wheel-smoke/bin/python" -m pip install dist/*.whl
+          "${RUNNER_TEMP}/wheel-smoke/bin/python" -I -c "from importlib.metadata import entry_points, version; from keyrings.cryptfile.cryptfile import CryptFileKeyring; assert version('keyrings.cryptfile') == '1.5.0'; assert CryptFileKeyring.priority == 2.5; assert entry_points(group='keyring.backends', name='cryptfile')"
+      - name: Install and smoke-test source distribution
+        run: |
+          python -m venv "${RUNNER_TEMP}/sdist-smoke"
+          "${RUNNER_TEMP}/sdist-smoke/bin/python" -m pip install dist/*.tar.gz
+          "${RUNNER_TEMP}/sdist-smoke/bin/python" -I -c "from importlib.metadata import version; from keyrings.cryptfile.cryptfile import CryptFileKeyring; assert version('keyrings.cryptfile') == '1.5.0'; assert CryptFileKeyring.priority == 2.5"

@@ -2,8 +2,6 @@ import getpass
 import os
 import pathlib
 import shutil
-import sys
-import tempfile
 from unittest import mock
 
 import pytest
@@ -13,11 +11,6 @@ from .test_file import FileKeyringTests
 from keyrings.cryptfile import cryptfile
 from keyrings.cryptfile.escape import escape as escape_for_ini
 
-if sys.version_info < (3, 6):
-    fspath = str
-else:
-    fspath = os.fspath
-
 def is_crypto_supported():
     try:
         __import__('argon2.low_level')
@@ -25,6 +18,27 @@ def is_crypto_supported():
     except ImportError:
         return False
     return True
+
+
+def test_backend_priority():
+    assert cryptfile.CryptFileKeyring.priority == 2.5
+
+
+def test_supported_aes_modes():
+    assert set(cryptfile.CryptFileKeyring._get_mode()) == {'CCM', 'EAX', 'GCM', 'OCB'}
+    assert cryptfile.CryptFileKeyring._get_mode('invalid') is None
+
+
+def test_explicit_keyring_key(tmp_path):
+    kr = cryptfile.CryptFileKeyring()
+    kr.file_path = os.fspath(tmp_path / 'explicit-key.cfg')
+    kr.keyring_key = 'abcdef'
+
+    kr.set_password('service', 'user', 'password')
+    assert kr.get_password('service', 'user') == 'password'
+
+    with pytest.raises(ValueError, match='Invalid blank password'):
+        kr.keyring_key = '   '
 
 
 @pytest.mark.skipif(not is_crypto_supported(),
@@ -63,7 +77,7 @@ class TestCryptFileKeyring(FileKeyringTests):
 
         # compatibility with former scheme format
         config.set(krsetting, scheme, 'PyCryptodome ' + defscheme)
-        assert self.keyring._check_scheme(config) == None
+        assert self.keyring._check_scheme(config) is None
 
         # test with invalid KDF
         config.set(krsetting, scheme, defscheme.replace('Argon2', 'PBKDF2'))
@@ -73,7 +87,7 @@ class TestCryptFileKeyring(FileKeyringTests):
         # a missing scheme is valid
         config.remove_option(krsetting, scheme)
         self.save_config(config)
-        assert self.keyring._check_file() == True
+        assert self.keyring._check_file() is True
 
         with pytest.raises(AttributeError):
             self.keyring._check_scheme(config)
@@ -117,15 +131,15 @@ def test_versions(version, activities, monkeypatch, tmp_path):
     version_string = '.'.join(str(segment) for segment in version)
     filename = 'cp{version_string}.cfg'.format(version_string=version_string)
     shutil.copyfile(
-        fspath(pathlib.Path(__file__).parent.joinpath(filename)),
-        fspath(tmp_path.joinpath(filename)),
+        os.fspath(pathlib.Path(__file__).parent.joinpath(filename)),
+        os.fspath(tmp_path.joinpath(filename)),
     )
 
     fake_getpass = mock.Mock(return_value='passwd')
     monkeypatch.setattr(getpass, 'getpass', fake_getpass)
 
     kr = cryptfile.CryptFileKeyring()
-    kr.file_path = fspath(tmp_path.joinpath(filename))
+    kr.file_path = os.fspath(tmp_path.joinpath(filename))
 
     for activity in activities:
         if activity == 'get':
@@ -141,7 +155,7 @@ def test_password_via_env(monkeypatch, tmp_path):
     monkeypatch.setattr(getpass, 'getpass', fake_getpass)
 
     kr = cryptfile.CryptFileKeyring()
-    kr.file_path = fspath(tmp_path.joinpath('cp_new.cfg'))
+    kr.file_path = os.fspath(tmp_path.joinpath('cp_new.cfg'))
     kr.set_password('test write', 'user', 'test password')
 
     fake_getpass = mock.Mock(return_value='wrong passwd')
@@ -150,7 +164,7 @@ def test_password_via_env(monkeypatch, tmp_path):
 
     # now create a new one and get password here without prompt
     kr = cryptfile.CryptFileKeyring()
-    kr.file_path = fspath(tmp_path.joinpath('cp_new.cfg'))
+    kr.file_path = os.fspath(tmp_path.joinpath('cp_new.cfg'))
 
     assert kr.get_password('test write', 'user') == 'test password'
 
@@ -160,7 +174,7 @@ def test_new_file(monkeypatch, tmp_path):
     monkeypatch.setattr(getpass, 'getpass', fake_getpass)
 
     kr = cryptfile.CryptFileKeyring()
-    kr.file_path = fspath(tmp_path.joinpath('cp_new.cfg'))
+    kr.file_path = os.fspath(tmp_path.joinpath('cp_new.cfg'))
 
     kr.set_password('test write', 'user', 'test password')
     assert kr.get_password('test write', 'user') == 'test password'
@@ -170,10 +184,9 @@ def test_new_file_via_env(monkeypatch, tmp_path):
     fake_getpass = mock.Mock(return_value='passwd')
     monkeypatch.setattr(getpass, 'getpass', fake_getpass)
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        cryptfile_path = os.path.join(tmpdir, 'cf_new.cfg')
-        monkeypatch.setenv('KEYRING_CRYPTFILE_PATH', cryptfile_path)
-        kr = cryptfile.CryptFileKeyring()
-        kr.set_password('test write', 'user', 'test password')
-        assert kr.get_password('test write', 'user') == 'test password'
-        assert os.path.exists(cryptfile_path)
+    cryptfile_path = os.fspath(tmp_path / 'cf_new.cfg')
+    monkeypatch.setenv('KEYRING_CRYPTFILE_PATH', cryptfile_path)
+    kr = cryptfile.CryptFileKeyring()
+    kr.set_password('test write', 'user', 'test password')
+    assert kr.get_password('test write', 'user') == 'test password'
+    assert os.path.exists(cryptfile_path)

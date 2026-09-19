@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 import os
 import sys
 import json
@@ -35,7 +33,7 @@ class PlaintextKeyring(Keyring):
     def _check_version(self, config):
         return False
 
-class Encrypted(object):
+class Encrypted:
     """
     PyCrypto-backed Encryption support
     """
