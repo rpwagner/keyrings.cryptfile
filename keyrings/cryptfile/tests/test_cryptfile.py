@@ -96,7 +96,7 @@ class TestCCMCryptFileKeyring(TestCryptFileKeyring):
 
 @pytest.mark.skipif(not is_crypto_supported(),
                     reason = "Need argon2_cffi and PyCryptodome package")
-class TesstOCBCryptFileKeyring(TestCryptFileKeyring):
+class TestOCBCryptFileKeyring(TestCryptFileKeyring):
     """ test OCB mode """
 
 
@@ -145,7 +145,7 @@ def test_password_via_env(monkeypatch, tmp_path):
     kr.set_password('test write', 'user', 'test password')
 
     fake_getpass = mock.Mock(return_value='wrong passwd')
-    os.environ['KEYRING_CRYPTFILE_PASSWORD'] = "passwd"
+    monkeypatch.setenv('KEYRING_CRYPTFILE_PASSWORD', 'passwd')
     monkeypatch.setattr(getpass, 'getpass', fake_getpass)
 
     # now create a new one and get password here without prompt
@@ -171,8 +171,9 @@ def test_new_file_via_env(monkeypatch, tmp_path):
     monkeypatch.setattr(getpass, 'getpass', fake_getpass)
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        os.environ['KEYRING_CRYPTFILE_PATH'] = os.path.join(tmpdir, "cf_new.cfg")
+        cryptfile_path = os.path.join(tmpdir, 'cf_new.cfg')
+        monkeypatch.setenv('KEYRING_CRYPTFILE_PATH', cryptfile_path)
         kr = cryptfile.CryptFileKeyring()
         kr.set_password('test write', 'user', 'test password')
         assert kr.get_password('test write', 'user') == 'test password'
-        assert os.path.exists(os.environ['KEYRING_CRYPTFILE_PATH'])
+        assert os.path.exists(cryptfile_path)

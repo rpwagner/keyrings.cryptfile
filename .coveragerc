@@ -4,6 +4,7 @@ branch = True
 [report]
 omit =
     keyrings/cryptfile/convert.py
+    keyrings/cryptfile/tests/*
 
 exclude_lines =
     # Have to re-enable the standard pragma
@@ -29,5 +30,4 @@ exclude_lines =
 
 
 show_missing = True
-ignore_errors = True
-
+fail_under = 90

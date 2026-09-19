@@ -44,6 +44,12 @@ class FileKeyringTests(BackendBasicTests):
         with open(self.keyring.file_path, 'w') as config_file:
             config.write(config_file)
 
+    def test_empty_username(self):
+        """The file format deliberately rejects empty usernames."""
+        with pytest.warns(DeprecationWarning, match="Empty usernames"):
+            with pytest.raises(ValueError, match="Username cannot be blank"):
+                self.set_password('service1', '', 'password1')
+
     def test_encrypt_decrypt(self):
         password = random_string(20)
         # keyring.encrypt expects bytes
