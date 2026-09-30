@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import sysconfig
 
 
 def test_all_installed_console_scripts_report_package_version(tmp_path):
@@ -41,7 +42,7 @@ def test_all_installed_console_scripts_report_package_version(tmp_path):
         KNOWLEDGE_KIT_CONFIG=str(invalid_config),
     )
     for entry in scripts:
-        executable = Path(sys.executable).with_name(entry.name)
+        executable = Path(sysconfig.get_path("scripts")) / entry.name
         if os.name == "nt":
             executable = executable.with_suffix(".exe")
         result = subprocess.run(
