@@ -4,6 +4,7 @@ import os
 import sys
 import logging
 import argparse
+from importlib.metadata import version
 
 log = logging.getLogger('convert')
 
@@ -20,14 +21,14 @@ If outfile exists already, it is preserved as outfile~.
 
 Default infile:
 %s
-""" % CryptFileKeyring().file_path
+"""
 
 class CommandLineTool:
     def __init__(self):
         self.aesmodes = CryptFileKeyring._get_mode()
         self.parser = argparse.ArgumentParser(
                         usage = '%(prog)s [-hvk] aesmode [infile] [outfile]',
-                        epilog = NOTE,
+                        epilog = NOTE % CryptFileKeyring().file_path,
                         formatter_class=argparse.RawDescriptionHelpFormatter)
         self.parser.add_argument('aesmode', help = 'new AES mode [one of: %s]' %
                                                    ', '.join(self.aesmodes))
@@ -43,6 +44,9 @@ class CommandLineTool:
         self.parser.add_argument('-k', '--keep',
                                  help = 'keep old password',
                                  action = 'store_true')
+        self.parser.add_argument('--version', action='version',
+                                 version='cryptfile-convert (keyrings.cryptfile) ' +
+                                         version('keyrings.cryptfile'))
 
     def run(self, argv):
         # parse args, setup logging and prepare keyrings
@@ -131,6 +135,10 @@ def main(argv=None):
     """Main command line interface."""
     if argv is None:
         argv = sys.argv[1:]
+
+    if list(argv) == ['--version']:
+        print('cryptfile-convert (keyrings.cryptfile) ' + version('keyrings.cryptfile'))
+        return 0
 
     cli = CommandLineTool()
     try:
