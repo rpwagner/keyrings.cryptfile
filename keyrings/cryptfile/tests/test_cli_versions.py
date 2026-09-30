@@ -24,7 +24,9 @@ def test_all_installed_console_scripts_report_package_version(tmp_path):
         "socket.socket.connect = forbidden\n"
         "socket.create_connection = forbidden\n"
         "sqlite3.connect = forbidden\n"
-        "subprocess.Popen = forbidden\n"
+        "class NoProcess(subprocess.Popen):\n"
+        "    def __init__(self, *args, **kwargs): forbidden()\n"
+        "subprocess.Popen = NoProcess\n"
         "class NoInput:\n"
         "    read = readline = readlines = forbidden\n"
         "sys.stdin = NoInput()\n",
