@@ -195,3 +195,7 @@ Install the test dependencies and run pytest:
 ```
 
 Feedback is always welcome.
+
+## Installed CLI version
+
+`cryptfile-convert --version` reports the installed `keyrings.cryptfile` distribution version from Python package metadata and exits successfully without loading configuration, opening databases or credentials, contacting services, or starting a runtime.
